@@ -13,6 +13,12 @@ Liste de rôles
 - 
 - 
 
+## Risques métiers en cas d’incident :
+
+- plus de suivi des investissements (acheteurs et vendeurs)
+- une même part vendue deux fois
+- erreurs de paiments
+
 ## UserStroy :
 
 - En tant que user, je n'ai accès qu'à la partie vente de parts de socités
