@@ -1,7 +1,20 @@
 # Marketplace d'achat de part en bourse ou de parts de société
 Liste de rôles
+
 ## Rôles
 
 - User -> Acheter des parts
 - Patron -> Voir le financement et qui aide, plus ajouter une société 
 - Super admin -> dashboard de tous les projets
+
+## Règles de gestions :
+
+- 
+- 
+- 
+
+## UserStroy :
+
+- En tant que user, je n'ai accès qu'à la partie vente de parts de socités
+- En tant que Patron, j'ai également accès à la vente mais je peux aussi placer ma société pour avoir des parts
+- En tant qu'admin, j'ai accès à l'integralité de la plate-forme (achat comme vente), ainsi qu'un dashboard spécial listant toutes les sociétés et tous les acheteurs
