@@ -9,14 +9,13 @@ Liste de rôles
 
 ## Règles de gestions :
 
-- 
-- 
-- 
+- Gestion d'une même part vendue deux fois
+- Gestion de l'heure d'achat d'une part
+- Une entreprise ne peux pas fermée si il y a des parts dedans
 
 ## Risques métiers en cas d’incident :
 
 - plus de suivi des investissements (acheteurs et vendeurs)
-- une même part vendue deux fois
 - erreurs de paiments
 
 ## UserStroy :
