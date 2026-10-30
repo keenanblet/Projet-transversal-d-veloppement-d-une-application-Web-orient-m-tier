@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, status
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, status, Header
 from pydantic import BaseModel
 from database import Base, SessionLocal
 from sqlalchemy import Column, ForeignKey, Integer, String
@@ -58,8 +58,28 @@ user_router_v1 = APIRouter(prefix="/users", tags=["users v1"])
     status.HTTP_500_INTERNAL_SERVER_ERROR
 
 '''
+
+'''
+ Mini doc : lire un header HTTP avec FastAPI
+ -  Un header = une info envoyée par le client en plus de l'URL (ex : Authorization, User-Agent, X-Token).
+ -  Pour le lire, on ajoute un paramètre à la fonction avec Header() :
+
+        async def get_user_v1(db: Session = Depends(get_db),
+                              x_token: str | None = Header(default=None)):
+
+ -  Le nom Python utilise des "_" et FastAPI le convertit en "-" :
+    x_token  ->  header "X-Token"
+ -  "str | None" + default=None : le header est optionnel (sans lui, x_token vaut None).
+    Pour le rendre obligatoire : x_token: str = Header()  (sinon erreur 422).
+ -  Les paramètres sans valeur par défaut doivent venir avant ceux qui en ont un,
+    et chaque paramètre est séparé par une virgule.
+ -  Tester : curl -H "X-Token: abc" http://127.0.0.1:8000/v1/users
+    (ou dans /docs, le champ x-token apparait dans la route).
+ -  Pour envoyer un header dans une REPONSE : utiliser Response (paramètre response: Response,
+    puis response.headers["X-Mon-Header"] = "valeur").
+'''
 @user_router_v1.get("", summary="List all users", status_code=status.HTTP_200_OK, response_model=list[schemas.UserRead])
-async def get_user_v1(db:Session=Depends(get_db)):
+async def get_user_v1(db:Session=Depends(get_db), x_token: str = Header()):
     try:
         users = repositories.get_users(db)
     except Exception:
