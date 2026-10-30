@@ -32,3 +32,59 @@ Liste de rôles
 | User | X | X | X | X | X | X | X |  | X | X |
 | visiteur | X |  |  |  | X | X | X |  | X |  |
 
+## Schéma UML
+```mermaid
+---
+title : Schéma UML
+---
+classDiagram
+		class User{
+		    Id
+		    Nom
+		    Prénom
+		    mail
+		    MotDePasse
+		    EstVendeur
+		}
+    class Entreprise{
+        Id
+        Nom
+        Siret
+    }
+    
+    class Part{
+		    Id
+		    Nom
+		    Prix
+		    
+    }
+    class Vente{
+    Id
+    Quantité
+    }
+    
+    class Commande {
+		    Id 
+		    Moyen de paiement
+		    
+
+		    
+    }
+    
+    class LigneCommande {
+		    prix achat
+		    quantité
+    }
+		
+		
+    
+    
+    User"1..*" --> "0..*" Entreprise
+    User"0..1" --> "0..*" Part
+    User"0..1" --> "0..*" Commande
+    Entreprise"1" --> "0..*" Part
+    Commande"1" --> "0..*" LigneCommande
+    Part"1" --> "0..1" Commande
+    Entreprise"1" --> "0..*" Vente
+    Vente"1" --> "0..*" Part
+```
