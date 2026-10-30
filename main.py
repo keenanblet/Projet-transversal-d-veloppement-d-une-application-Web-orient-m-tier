@@ -68,5 +68,33 @@ async def get_user_v1(db:Session=Depends(get_db)):
     logger.info("Listed %d users", len(users))
     return users
 
+
+@user_router_v1.get("/{user_id}", response_model=schemas.UserCrudRead, summary="Get a user by ID")
+async def get_user_by_id_v1(user_id: int, db: Session = Depends(get_db)):
+    user = repositories.get_user(db, user_id)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
+
+
+@user_router_v1.post("", response_model=schemas.UserCrudRead, status_code=status.HTTP_201_CREATED, summary="Create a user")
+async def create_user_v1(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    return repositories.create_user(db, user)
+
+
+@user_router_v1.patch("/{user_id}", response_model=schemas.UserCrudRead, summary="Update a user")
+async def update_user_v1(user_id: int, user: schemas.UserUpdate, db: Session = Depends(get_db)):
+    updated_user = repositories.update_user(db, user_id, user)
+    if updated_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return updated_user
+
+
+@user_router_v1.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete a user")
+async def delete_user_v1(user_id: int, db: Session = Depends(get_db)):
+    deleted = repositories.delete_user(db, user_id)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
 # Create versioning for API endpoint by incorporating user_router_v1 into FastAPI application instance
 app.include_router(user_router_v1, prefix="/v1")
