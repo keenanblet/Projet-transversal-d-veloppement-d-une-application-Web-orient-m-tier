@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from database import Base, SessionLocal
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
 
 import models,schemas, repositories
@@ -51,6 +52,18 @@ def get_db():
     finally:
         db.close()
 
+# identifie qui appelle, grâce au header X-User-Id 
+def get_current_user(x_user_id: int = Header(), db: Session = Depends(get_db)):
+    user = repositories.get_user(db, x_user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Non connecté")
+    return user
+
+# refuse si estVendeur est faux
+def require_vendeur(user = Depends(get_current_user)):
+    if not user.estVendeur:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Réservé aux vendeurs")
+    return user
 
 # Create routers for different route groups
 user_router_v1 = APIRouter(prefix="/users", tags=["users v1"])
@@ -71,7 +84,7 @@ user_router_v1 = APIRouter(prefix="/users", tags=["users v1"])
 '''
 
 
-@user_router_v1.get("", summary="List all users", status_code=status.HTTP_200_OK, response_model=list[schemas.UserRead])
+@user_router_v1.get("", summary="List all users", status_code=status.HTTP_200_OK, response_model=list[schemas.UserCrudRead])
 async def get_user_v1(db:Session=Depends(get_db), x_token: str = Header()):
     try:
         users = repositories.get_users(db)
@@ -108,6 +121,18 @@ async def delete_user_v1(user_id: int, db: Session = Depends(get_db)):
     deleted = repositories.delete_user(db, user_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+# renvoie le user avec id et estVendeur pas de mdp
+auth_router = APIRouter(prefix="/auth", tags=["auth"])
+
+@auth_router.post("/login", response_model=schemas.UserCrudRead)
+async def login(data: schemas.LoginRequest, db: Session = Depends(get_db)):
+    user = repositories.get_user_by_mail(db, data.mail)
+    if user is None or user.motDePasse != data.motDePasse:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Mail ou mot de passe incorrect")
+    return user
+
+app.include_router(auth_router, prefix="/v1")
 
 # Create versioning for API endpoint by incorporating user_router_v1 into FastAPI application instance
 app.include_router(user_router_v1, prefix="/v1")
