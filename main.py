@@ -128,7 +128,7 @@ auth_router = APIRouter(prefix="/auth", tags=["auth"])
 @auth_router.post("/login", response_model=schemas.UserCrudRead)
 async def login(data: schemas.LoginRequest, db: Session = Depends(get_db)):
     user = repositories.get_user_by_mail(db, data.mail)
-    if user is None or user.motDePasse != data.motDePasse:
+    if user is None or not repositories.pwd_context.verify(data.motDePasse, user.motDePasse):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Mail ou mot de passe incorrect")
     return user
 

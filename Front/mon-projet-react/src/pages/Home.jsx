@@ -136,7 +136,7 @@ export default function Home() {
 
       <footer className="border-t">
         <div className="mx-auto max-w-6xl px-6 py-6 text-sm text-muted-foreground">
-          © {new Date().getFullYear()} MaPart — Projet transversal EPSI B2
+          © {new Date().getFullYear()} MaPart — Projet transversal EPSI B2 - Keenan Johanne Palex
         </div>
       </footer>
     </div>
