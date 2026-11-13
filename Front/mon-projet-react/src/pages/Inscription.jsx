@@ -12,6 +12,12 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { useNavigate } from 'react-router-dom';
+import { CircleXIcon, InfoIcon } from "lucide-react"
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
 
 const initialForm = {
   nom: '',
@@ -22,6 +28,8 @@ const initialForm = {
 }
 
 export default function Inscription() {
+  const [estActive, setEstActive] = useState(false);
+
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm)
   const update = (field) => (e) =>
@@ -35,14 +43,19 @@ export default function Inscription() {
     axios.post('http://127.0.0.1:8000/v1/users', form)
       .then(response => {
         console.log(response.data);
+        navigate('/');
       })
       .catch(error => {
         console.error('There was a problem with the request:', error);
+        const popupError = () => {
+          setEstActive(true);
+        };
+        popupError();
       });
-    navigate('/');
+
   }
 
-  
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
@@ -101,6 +114,15 @@ export default function Inscription() {
             <Button type="submit" className="w-full">
               Créer mon compte
             </Button>
+            {estActive && (
+              <Alert>
+                <CircleXIcon />
+                <AlertTitle>Adresse email déjà utilisée</AlertTitle>
+                <AlertDescription>
+                  Une compte existe déjà avec cette adresse email.
+                </AlertDescription>
+              </Alert>
+            )}
           </form>
         </CardContent>
       </Card>
