@@ -2,7 +2,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+
 DB_URL="mysql://api_user:1234@172.16.118.67:3306/MaPart"
+
+
 # Initialize database engine by using MySQL
 engine = create_engine(DB_URL,echo=True)
 

@@ -1,5 +1,10 @@
 from sqlalchemy.orm import Session
 from datetime import datetime
+from passlib.context import CryptContext
+
+
+# hash
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 import models,schemas
 
@@ -13,7 +18,9 @@ def get_user(db: Session, user_id: int):
 
 
 def create_user(db: Session, user: schemas.UserCreate):
-    db_user = models.User(**user.model_dump())
+    data = user.model_dump()
+    data["motDePasse"] = pwd_context.hash(user.motDePasse)
+    db_user = models.User(**data)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
