@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, status, Header
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from database import Base, SessionLocal
 from sqlalchemy import Column, ForeignKey, Integer, String
@@ -16,6 +17,13 @@ logger = logging.getLogger("app")
 
 #create FastAPI application instance
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # Log every request with its status code and duration
