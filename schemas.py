@@ -40,4 +40,7 @@ class UserUpdate(BaseModel):
     motDePasse: Optional[str] = None
     estVendeur: Optional[bool] = None
 
-
+# ce que le front envoie pour se connecter 
+class LoginRequest(BaseModel):
+    mail: str
+    motDePasse: str
