@@ -184,3 +184,64 @@ npm ls --depth=0 --silent 2>$null
 if ($LASTEXITCODE -eq 0) { Write-Host "Toutes les dépendances sont à la bonne version, pas d'installation" } else { npm install }
 npm run dev
 ```
+
+
+
+``` mermaid
+flowchart TB
+  subgraph FRONT["⚛️ FRONT React - localhost:5173"]
+    direction TB
+    HTML["<b>index.html</b><br/>seule page HTML du site<br/>contient la div root où React dessine tout"]
+    MAIN["<b>main.jsx</b><br/>point d'entrée React<br/>emboîte Router, AuthProvider puis App"]
+    APP["<b>App.jsx</b><br/>table des routes<br/>associe chaque URL à une page"]
+    HOME["<b>pages/Home.jsx</b><br/>page d'accueil, vitrine du site<br/>nav à adapter selon user connecté"]
+    INS["<b>pages/Inscription.jsx</b><br/>formulaire de création de compte<br/>envoie POST /v1/users"]
+    CON["<b>pages/Connexion.jsx</b><br/>formulaire mail + mot de passe<br/>appelle login() du contexte"]
+    CTX["<b>context/AuthContext.jsx</b><br/>mémoire partagée de la connexion<br/>user, chargement, login(), logout()<br/>au démarrage demande /me au back"]
+    UA["<b>context/useAuth.js</b><br/>raccourci pour lire le contexte<br/>depuis n'importe quelle page"]
+    REQ["<b>components/ui/RequireAuth.jsx</b><br/>cache une page si pas connecté<br/>redirige vers /connexion<br/>pas encore utilisé"]
+    UI["<b>components/ui/*</b><br/>composants shadcn<br/>Button, Card, Input, Alert..."]
+    API["<b>lib/api.js</b><br/>client axios unique vers le back<br/>withCredentials : envoie le cookie"]
+    FENV["<b>.env front</b><br/>VITE_API_URL<br/>adresse du back, rien de secret"]
+    VITE["<b>vite.config.js</b><br/>serveur de dev + plugins React et Tailwind<br/>alias @ = dossier src"]
+
+    HTML --> MAIN --> APP
+    APP --> HOME & INS & CON
+    MAIN --> CTX
+    HOME & CON & REQ --> UA --> CTX
+    CTX --> API
+    INS --> API
+    FENV -.-> API
+    HOME & INS & CON -.-> UI
+  end
+
+  subgraph BACK["🐍 BACK FastAPI - localhost:8000"]
+    direction TB
+    MAINPY["<b>main.py</b><br/>point d'entrée de l'API<br/>CORS, logs, toutes les routes<br/>/v1/auth et /v1/users"]
+    DEPS["<b>dépendances dans main.py</b><br/>get_db : ouvre et ferme la BDD<br/>get_current_user : lit le cookie, 401 sinon<br/>require_vendeur et verifier_proprietaire : 403"]
+    AUTH["<b>auth.py</b><br/>fabrique et vérifie les JWT<br/>signés avec la clé secrète"]
+    REPO["<b>repositories.py</b><br/>toutes les requêtes SQL<br/>get, create, update, delete<br/>hash et vérif bcrypt des mots de passe"]
+    SCH["<b>schemas.py</b><br/>format du JSON entrant et sortant<br/>valide les données reçues<br/>UserCrudRead : jamais le mot de passe"]
+    MOD["<b>models.py</b><br/>la table User vue depuis Python<br/>une Column = une colonne"]
+    DBPY["<b>database.py</b><br/>connexion MySQL<br/>engine, SessionLocal, Base"]
+    BENV["<b>.env back</b><br/>JWT_SECRET, DB_URL<br/>secrets, jamais sur GitHub"]
+    REQS["<b>requirements.txt</b><br/>bibliothèques Python à installer"]
+
+    MAINPY --> DEPS
+    DEPS --> AUTH
+    MAINPY --> REPO --> MOD --> DBPY
+    MAINPY -.-> SCH
+    BENV -.-> AUTH
+    BENV -.-> DBPY
+  end
+
+  subgraph BDD["🗄️ BDD MySQL"]
+    SQL[("<b>table User</b><br/>id, nom, prenom, mail<br/>motDePasse hashé, estVendeur")]
+    SQLF["<b>v1__.sql / v2__.sql</b><br/>création des tables<br/><b>peuplement.sql</b><br/>données de test"]
+    SQLF -.-> SQL
+  end
+
+  API == "requêtes HTTP + cookie httpOnly" ==> MAINPY
+  DBPY == "requêtes SQL" ==> SQL
+
+```

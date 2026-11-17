@@ -1,17 +1,26 @@
+# =============================================================================
+# models.py : les modèles SQLAlchemy (= les tables de la BDD vues depuis Python)
+# -----------------------------------------------------------------------------
+# Une classe = une table, un attribut Column = une colonne.
+# Ces objets servent à LIRE / ÉCRIRE en BDD (à ne pas confondre avec schemas.py,
+# qui décrit ce qui ENTRE et SORT de l'API en JSON).
+# =============================================================================
+
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, ForeignKey, String, Boolean
 from database import Base
 
-# We import Base which is created from database.py 
+
+# Table "User" : un utilisateur de la plateforme (investisseur ou vendeur)
 class User(Base):
-    __tablename__ = "User"
-    id = Column(Integer, primary_key=True, index=True)
+    __tablename__ = "User"                              # nom exact de la table dans MySQL
+    id = Column(Integer, primary_key=True, index=True)  # identifiant unique, généré par la BDD
     nom = Column(String)
     prenom = Column(String)
-    mail = Column(String)
-    motDePasse = Column(String)    
-    estVendeur = Column(Boolean)
-    
+    mail = Column(String)                               # sert d'identifiant pour la connexion
+    motDePasse = Column(String)                         # toujours stocké HASHÉ (bcrypt), jamais en clair
+    estVendeur = Column(Boolean)                        # True = vendeur (dirigeant), False = investisseur
+
 class Entreprise(Base):
     __tablename__ = "Entreprise"
     siret = Column(Integer, primary_key=True)
@@ -44,7 +53,9 @@ class LigneDeCommande(Base):
     Quantite = Column(Integer)
     idCommande = Column(Integer, ForeignKey("Commande.id"))
     idPart = Column(Integer, ForeignKey("Part.id"))
-    
+
+
+# Rappel de la définition SQL d'origine de la table User (pour référence) :
 #[id] int NOT NULL IDENTITY(1,1),
 #[nom] nvarchar(50) NOT NULL,
 #[prenom] nvarchar(50) NOT NULL,

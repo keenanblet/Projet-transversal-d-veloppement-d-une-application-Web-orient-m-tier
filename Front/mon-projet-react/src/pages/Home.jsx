@@ -49,13 +49,13 @@ export default function Home() {
             Ma<span className="text-primary">Part</span>
           </Link>
           <nav className="flex items-center gap-2">
-            <Button variant="ghost" render={<Link to="/societes" />}>
+            <Button variant="ghost" nativeButton={false} render={<Link to="/societes" />}>
               Sociétés
             </Button>
-            <Button variant="ghost" render={<Link to="/connexion" />}>
+            <Button variant="ghost" nativeButton={false} render={<Link to="/connexion" />}>
               Connexion
             </Button>
-            <Button render={<Link to="/inscription" />}>Créer un compte</Button>
+            <Button nativeButton={false} render={<Link to="/inscription" />}>Créer un compte</Button>
           </nav>
         </div>
       </header>
@@ -74,13 +74,14 @@ export default function Home() {
             claire, sécurisée et transparente.
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
-            <Button size="lg" render={<Link to="/societes" />}>
+            <Button size="lg" nativeButton={false} render={<Link to="/societes" />}>
               Voir les sociétés <ArrowRight />
             </Button>
             <Button
               size="lg"
               variant="outline"
               className="border-background/30 bg-transparent text-background hover:bg-background hover:text-foreground"
+              nativeButton={false}
               render={<Link to="/inscription" />}
             >
               Créer un compte
@@ -130,7 +131,7 @@ export default function Home() {
               Créez votre compte gratuitement et découvrez les sociétés disponibles.
             </p>
           </div>
-          <Button size="lg" variant="secondary" render={<Link to="/inscription" />}>
+          <Button size="lg" variant="secondary" nativeButton={false} render={<Link to="/inscription" />}>
             Commencer <ArrowRight />
           </Button>
         </div>

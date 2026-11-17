@@ -36,7 +36,7 @@ export default function Connexion() {
     e.preventDefault()
     try {
       await login(form.mail, form.motDePasse)
-      navigate('/')
+      navigate('/societes')
     } catch {
       setEstActive(true)
     }
