@@ -52,3 +52,40 @@ def delete_user(db: Session, user_id: int):
 # cherche user avec son mail pour login 
 def get_user_by_mail(db: Session, mail: str):
     return db.query(models.User).filter(models.User.mail == mail).first()
+
+def get_entreprises(db: Session):
+    resultat = []
+    for e in db.query(models.Entreprise).all():
+        vente = db.query(models.Vente).filter(models.Vente.idEntreprise == e.siret).first()
+        resultat.append({
+            "siret": e.siret,
+            "nom": e.nom,
+            "prixPart": vente.prixPart if vente else None,
+        })
+    return resultat
+
+
+def acheter_parts(db: Session, siret: int, user_id: int, quantite: int):
+    # parts de cette entreprise qui n'ont encore aucune ligne de commande
+    parts = (
+        db.query(models.Part)
+        .join(models.Vente, models.Part.idVente == models.Vente.id)
+        .outerjoin(models.LigneDeCommande, models.LigneDeCommande.idPart == models.Part.id)
+        .filter(models.Vente.idEntreprise == siret, models.LigneDeCommande.id.is_(None))
+        .with_for_update()  # verrou : évite qu'une même part soit vendue deux fois
+        .limit(quantite)
+        .all()
+    )
+    if len(parts) < quantite:
+        db.rollback()
+        return None
+
+    commande = models.Commande(idUser=user_id, idmoyenDePaiement=1, idEntreprise=siret)
+    db.add(commande)
+    db.flush()  # pour récupérer commande.id
+    for part in parts:
+        db.add(models.LigneDeCommande(
+            prixAchat=part.prix, Quantite=1, idCommande=commande.id, idPart=part.id
+        ))
+    db.commit()
+    return commande

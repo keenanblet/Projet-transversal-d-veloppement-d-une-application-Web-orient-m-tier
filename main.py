@@ -174,5 +174,27 @@ async def me(user = Depends(get_current_user)):
 
 app.include_router(auth_router, prefix="/v1")
 
+entreprise_router_v1 = APIRouter(prefix="/entreprises", tags=["entreprises v1"])
+
+# publique : un visiteur non connecté peut la lire
+@entreprise_router_v1.get("", response_model=list[schemas.EntrepriseRead])
+async def list_entreprises_v1(db: Session = Depends(get_db)):
+    return repositories.get_entreprises(db)
+
+# réservée aux connectés (header X-User-Id)
+@entreprise_router_v1.post("/{siret}/achats", status_code=status.HTTP_201_CREATED)
+async def acheter_parts_v1(
+    siret: int,
+    achat: schemas.AchatCreate,
+    user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    commande = repositories.acheter_parts(db, siret, user.id, achat.quantite)
+    if commande is None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Pas assez de parts disponibles")
+    return {"idCommande": commande.id}
+
+app.include_router(entreprise_router_v1, prefix="/v1")
+
 # Create versioning for API endpoint by incorporating user_router_v1 into FastAPI application instance
 app.include_router(user_router_v1, prefix="/v1")

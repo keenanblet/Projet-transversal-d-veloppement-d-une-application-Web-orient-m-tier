@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+from pydantic import Field
+from pydantic import ConfigDict
 
 
 class UserRead(BaseModel):
@@ -10,9 +12,6 @@ class UserRead(BaseModel):
     mail : str
     motDePasse : str   
     estVendeur : bool
-
-
-from pydantic import ConfigDict
 
 
 class UserCrudRead(BaseModel):
@@ -44,3 +43,11 @@ class UserUpdate(BaseModel):
 class LoginRequest(BaseModel):
     mail: str
     motDePasse: str
+
+class EntrepriseRead(BaseModel):
+    siret: int
+    nom: str
+    prixPart: Optional[int] = None
+
+class AchatCreate(BaseModel):
+    quantite: int = Field(gt=0)
