@@ -18,6 +18,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/components/ui/alert"
+import { api } from '@/lib/api'
 
 const initialForm = {
   nom: '',
@@ -40,7 +41,7 @@ export default function Inscription() {
 
   function handleSubmit(e) {
     e.preventDefault()
-    axios.post('http://127.0.0.1:8000/v1/users', form)
+    api.post('/v1/users', form)
       .then(response => {
         console.log(response.data);
         navigate('/');

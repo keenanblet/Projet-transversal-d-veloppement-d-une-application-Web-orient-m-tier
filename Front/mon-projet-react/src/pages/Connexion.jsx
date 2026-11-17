@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import axios from 'axios'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,6 +13,7 @@ import {
 } from '@/components/ui/card'
 import { CircleXIcon } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { useAuth } from '@/context/useAuth'
 
 const initialForm = {
   mail: '',
@@ -22,6 +22,7 @@ const initialForm = {
 
 export default function Connexion() {
   const [estActive, setEstActive] = useState(false)
+  const { login } = useAuth()
 
   const navigate = useNavigate()
   const [form, setForm] = useState(initialForm)
@@ -31,18 +32,16 @@ export default function Connexion() {
       [field]: e.target.value,
     }))
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    axios.post('http://127.0.0.1:8000/v1/auth/login', form)
-      .then(response => {
-        console.log(response.data)
-        navigate('/')
-      })
-      .catch(error => {
-        console.error('There was a problem with the request:', error)
-        setEstActive(true)
-      })
+    try {
+      await login(form.mail, form.motDePasse)
+      navigate('/')
+    } catch {
+      setEstActive(true)
+    }
   }
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">

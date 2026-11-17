@@ -10,3 +10,4 @@ mysqlclient==2.3.0
 mysql-connector-python==26.10.0
 python-dotenv==1.2.2
 python-multipart==0.0.32
+pyjwt==2.15.1

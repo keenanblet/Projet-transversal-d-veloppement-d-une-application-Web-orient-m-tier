@@ -1,5 +1,6 @@
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, status, Header
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, status, Header, Cookie
 from fastapi.middleware.cors import CORSMiddleware
+import auth
 from pydantic import BaseModel
 from database import Base, SessionLocal
 from sqlalchemy import Column, ForeignKey, Integer, String
@@ -10,8 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import models,schemas, repositories
 import logging
 import time
-
-
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,6 +26,7 @@ app.add_middleware(
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
 
 
@@ -52,11 +52,20 @@ def get_db():
     finally:
         db.close()
 
-# identifie qui appelle, grâce au header X-User-Id 
-def get_current_user(x_user_id: int = Header(), db: Session = Depends(get_db)):
-    user = repositories.get_user(db, x_user_id)
-    if user is None:
+# identifie qui appelle, grâce au JWT rangé dans le cookie httpOnly "access_token"
+# (le nom du paramètre doit être identique au nom du cookie)
+def get_current_user(
+    access_token: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+):
+    if access_token is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Non connecté")
+    user_id = auth.decode_access_token(access_token)
+    if user_id is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token invalide ou expiré")
+    user = repositories.get_user(db, user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Utilisateur introuvable")
     return user
 
 # refuse si estVendeur est faux
@@ -103,6 +112,8 @@ async def get_user_by_id_v1(user_id: int, db: Session = Depends(get_db)):
     return user
 
 
+
+
 @user_router_v1.post("", response_model=schemas.UserCrudRead, status_code=status.HTTP_201_CREATED, summary="Create a user")
 async def create_user_v1(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return repositories.create_user(db, user)
@@ -122,14 +133,43 @@ async def delete_user_v1(user_id: int, db: Session = Depends(get_db)):
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-# renvoie le user avec id et estVendeur pas de mdp
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
+# vérifie mail + mdp, pose le JWT dans un cookie httpOnly et renvoie le user (sans mdp ni jeton)
 @auth_router.post("/login", response_model=schemas.UserCrudRead)
-async def login(data: schemas.LoginRequest, db: Session = Depends(get_db)):
+async def login(data: schemas.LoginRequest, response: Response, db: Session = Depends(get_db)):
     user = repositories.get_user_by_mail(db, data.mail)
-    if user is None or not repositories.pwd_context.verify(data.motDePasse, user.motDePasse):
+    try:
+        mdp_ok = user is not None and repositories.pwd_context.verify(data.motDePasse, user.motDePasse)
+    except ValueError:
+        # mdp en BDD qui n'est pas un hash bcrypt valide (ex : données de test en clair)
+        mdp_ok = False
+    if not mdp_ok:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Mail ou mot de passe incorrect")
+    token = auth.create_access_token(user.id)
+    response.set_cookie(
+        key=auth.COOKIE_NAME,
+        value=token,
+        httponly=True,                     # illisible par le JavaScript (protège du vol par XSS)
+        samesite="lax",                    # limite les attaques CSRF
+        secure=auth.COOKIE_SECURE,         # True en production (HTTPS obligatoire)
+        max_age=auth.EXPIRE_MINUTES * 60,  # durée de vie en secondes, comme le JWT
+    )
+    return user
+
+# le JS ne peut pas toucher un cookie httpOnly : c'est le back qui le supprime
+@auth_router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(response: Response):
+    response.delete_cookie(
+        key=auth.COOKIE_NAME,
+        httponly=True,
+        samesite="lax",
+        secure=auth.COOKIE_SECURE,
+    )
+
+# renvoie l'utilisateur connecté (401 sinon) : le front l'appelle pour savoir s'il est connecté
+@auth_router.get("/me", response_model=schemas.UserCrudRead)
+async def me(user = Depends(get_current_user)):
     return user
 
 app.include_router(auth_router, prefix="/v1")

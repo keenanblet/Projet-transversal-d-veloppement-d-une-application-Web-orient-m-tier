@@ -38,6 +38,8 @@ const stats = [
   { value: '24/7', label: 'Accès à la place de marché' },
 ]
 
+
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
